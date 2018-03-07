@@ -1,6 +1,7 @@
 package de.difuture.ekut.pht.trainupdater.model.dockerevent;
 
 import java.net.URL;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,7 +25,7 @@ public final class DockerRegistryEventTarget {
 	private int length;
 	
 	@JsonProperty("repository")
-	private String repository;
+	private UUID repository;
 	
 	@JsonProperty("url")
 	private URL url;
