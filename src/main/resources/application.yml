@@ -4,3 +4,14 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://134.2.25.78:8761/eureka/
+
+spring:
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      bindings:
+        greetings-out:
+          destination: trainupdate
+          contentType: application/json

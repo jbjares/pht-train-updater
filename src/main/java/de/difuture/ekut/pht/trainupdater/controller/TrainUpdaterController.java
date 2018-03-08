@@ -1,26 +1,29 @@
 package de.difuture.ekut.pht.trainupdater.controller;
 
 
-import java.util.List;
-import java.util.Optional;
+import java.net.URI;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import de.difuture.ekut.pht.trainupdater.model.api.Train;
-import de.difuture.ekut.pht.trainupdater.model.api.TrainStateRequest;
+import de.difuture.ekut.pht.trainupdater.message.TrainAvailableMessage;
+import de.difuture.ekut.pht.trainupdater.message.TrainUpdateStreams;
 import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEvent;
 import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventAction;
 import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventCollection;
+import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventTarget;
 import lombok.NonNull;
 
 
@@ -30,34 +33,29 @@ public class TrainUpdaterController {
 	private static final ResponseEntity<?> OK = ResponseEntity.ok().build();
 
 	private final DiscoveryClient discoveryClient;
-
+	private final TrainUpdateStreams trainUpdateStreams;
+	
+	
 	@Autowired
 	public TrainUpdaterController(
-			@NonNull final DiscoveryClient discoveryClient) {
+			@NonNull final DiscoveryClient discoveryClient,
+			@NonNull final TrainUpdateStreams trainUpdateStreams) {
 
 		this.discoveryClient = discoveryClient;
+		this.trainUpdateStreams = trainUpdateStreams;
 	}
 
-	// Contact train central to set the train state to updated
-	private Optional<Train> updateTrain(DockerRegistryEvent event) {
-
-		final Optional<Train> empty = Optional.empty();
-		final TrainStateRequest request = new TrainStateRequest(event.getTarget().getRepository());
-
-		// TODO Singleton service
-		final List<ServiceInstance> trainCentrals = this.discoveryClient.getInstances("traincentral");
+	
+	private boolean broadcastTrainAvailable(final UUID trainID, final URI host) {
 		
-		if (trainCentrals.isEmpty()) {
-			
-			return empty;
-		}
-		final ServiceInstance trainCentral = trainCentrals.get(0);
-		
-		final Train response =  (new RestTemplate())
-				.postForObject(trainCentral.getUri() + "/train/upload", request, Train.class);
-		return Optional.of(response);
+		final TrainAvailableMessage payload = new TrainAvailableMessage(trainID, host);
+		final Message<TrainAvailableMessage> message = MessageBuilder
+				.withPayload(payload)
+				.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
+				.build();
+
+		return this.trainUpdateStreams.outboundTrainUpdate().send(message);
 	}
-
 
 
 	@RequestMapping(value = "/listener", method = RequestMethod.POST)	
@@ -65,12 +63,17 @@ public class TrainUpdaterController {
 
 		for (final DockerRegistryEvent event: events) {
 
-			// A push event will update the train in traincentral
-			if (event.getAction() == DockerRegistryEventAction.PUSH) {
-				
-				this.updateTrain(event);
-			}
+			// Sends a train available message if
+			// * Docker Registry Event Action is Push
+			// * The tag is not null
+			final DockerRegistryEventTarget target = event.getTarget();
 			
+			if (event.getAction() == DockerRegistryEventAction.PUSH && target.getTag() != null) {
+			
+				this.broadcastTrainAvailable(
+						target.getRepository(),
+						event.getRequest().getHost());
+			}
 		}
 		return OK;
 	}
