@@ -5,9 +5,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.MimeTypeUtils;
@@ -31,30 +29,22 @@ import lombok.NonNull;
 public class TrainUpdaterController {
 
 	private static final ResponseEntity<?> OK = ResponseEntity.ok().build();
-
-	private final DiscoveryClient discoveryClient;
 	private final TrainUpdateStreams trainUpdateStreams;
-	
 	
 	@Autowired
 	public TrainUpdaterController(
-			@NonNull final DiscoveryClient discoveryClient,
 			@NonNull final TrainUpdateStreams trainUpdateStreams) {
 
-		this.discoveryClient = discoveryClient;
 		this.trainUpdateStreams = trainUpdateStreams;
 	}
-
 	
 	private boolean broadcastTrainAvailable(final UUID trainID, final URI host) {
 		
-		final TrainAvailableMessage payload = new TrainAvailableMessage(trainID, host);
-		final Message<TrainAvailableMessage> message = MessageBuilder
-				.withPayload(payload)
-				.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
-				.build();
-
-		return this.trainUpdateStreams.outboundTrainUpdate().send(message);
+		return this.trainUpdateStreams.outboundTrainUpdate().send(
+				MessageBuilder
+					.withPayload(new TrainAvailableMessage(trainID, host))
+					.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
+					.build());
 	}
 
 
@@ -63,11 +53,11 @@ public class TrainUpdaterController {
 
 		for (final DockerRegistryEvent event: events) {
 
+			final DockerRegistryEventTarget target = event.getTarget();
+			
 			// Sends a train available message if
 			// * Docker Registry Event Action is Push
 			// * The tag is not null
-			final DockerRegistryEventTarget target = event.getTarget();
-			
 			if (event.getAction() == DockerRegistryEventAction.PUSH && target.getTag() != null) {
 			
 				this.broadcastTrainAvailable(

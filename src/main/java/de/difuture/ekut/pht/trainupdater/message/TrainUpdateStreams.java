@@ -5,6 +5,7 @@ import org.springframework.messaging.MessageChannel;
 
 public interface TrainUpdateStreams {
 
+	// TODO Move to centralized configuration
 	String OUTPUT = "trainupdate-out";
 
 	@Output(OUTPUT)
