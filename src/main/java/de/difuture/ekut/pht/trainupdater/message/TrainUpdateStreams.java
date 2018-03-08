@@ -6,8 +6,8 @@ import org.springframework.messaging.MessageChannel;
 public interface TrainUpdateStreams {
 
 	// TODO Move to centralized configuration
-	String OUTPUT = "trainupdate-out";
+	String TRAIN_AVAILABLE = "trainavailable";
 
-	@Output(OUTPUT)
-	MessageChannel outboundTrainUpdate();
+	@Output(TRAIN_AVAILABLE)
+	MessageChannel outboundTrainAvailable();
 }

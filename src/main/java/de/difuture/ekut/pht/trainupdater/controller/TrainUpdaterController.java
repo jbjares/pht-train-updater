@@ -40,7 +40,7 @@ public class TrainUpdaterController {
 	
 	private boolean broadcastTrainAvailable(final UUID trainID, final URI host) {
 		
-		return this.trainUpdateStreams.outboundTrainUpdate().send(
+		return this.trainUpdateStreams.outboundTrainAvailable().send(
 				MessageBuilder
 					.withPayload(new TrainAvailableMessage(trainID, host))
 					.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
