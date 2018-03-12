@@ -54,15 +54,22 @@ public class TrainUpdaterController {
 		for (final DockerRegistryEvent event: events) {
 
 			final DockerRegistryEventTarget target = event.getTarget();
-			
-			// Sends a train available message if
-			// * Docker Registry Event Action is Push
-			// * The tag is not null
-			if (event.getAction() == DockerRegistryEventAction.PUSH && target.getTag() != null) {
-			
-				this.broadcastTrainAvailable(
-						target.getRepository(),
-						event.getRequest().getHost());
+
+			try {
+                // Sends a train available message if
+                // * Docker Registry Event Action is Push
+                // * The tag is not null
+                if (event.getAction() == DockerRegistryEventAction.PUSH && target.getTag() != null) {
+
+                    this.broadcastTrainAvailable(
+                            UUID.fromString(target.getRepository()),
+                            event.getRequest().getHost());
+                }
+
+			} catch(final IllegalArgumentException e) {
+
+			    // TODO Currently ignore DockerRegistry events that do not belong to trains
+                // TODO There should be some logging going on
 			}
 		}
 		return OK;

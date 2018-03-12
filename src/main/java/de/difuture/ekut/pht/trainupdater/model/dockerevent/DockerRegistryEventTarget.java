@@ -25,7 +25,7 @@ public final class DockerRegistryEventTarget {
 	private int length;
 	
 	@JsonProperty("repository")
-	private UUID repository;
+	private String repository;
 	
 	@JsonProperty("url")
 	private URL url;
