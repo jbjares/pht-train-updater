@@ -4,6 +4,9 @@ package de.difuture.ekut.pht.trainupdater.controller;
 import java.net.URI;
 import java.util.UUID;
 
+import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
+import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventCollection;
+import de.difuture.ekut.pht.lib.core.messages.TrainAvailable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.MessageHeaders;
@@ -16,12 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import de.difuture.ekut.pht.trainupdater.message.TrainAvailableMessage;
 import de.difuture.ekut.pht.trainupdater.message.TrainUpdateStreams;
-import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEvent;
-import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventAction;
-import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventCollection;
-import de.difuture.ekut.pht.trainupdater.model.dockerevent.DockerRegistryEventTarget;
 import lombok.NonNull;
 
 
@@ -42,7 +40,7 @@ public class TrainUpdaterController {
 		
 		return this.trainUpdateStreams.outboundTrainAvailable().send(
 				MessageBuilder
-					.withPayload(new TrainAvailableMessage(trainID, host))
+					.withPayload(new TrainAvailable(trainID, host))
 					.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
 					.build());
 	}
@@ -53,13 +51,13 @@ public class TrainUpdaterController {
 
 		for (final DockerRegistryEvent event: events) {
 
-			final DockerRegistryEventTarget target = event.getTarget();
+			final DockerRegistryEvent.Target target = event.getTarget();
 
 			try {
                 // Sends a train available message if
                 // * Docker Registry Event Action is Push
                 // * The tag is not null
-                if (event.getAction() == DockerRegistryEventAction.PUSH && target.getTag() != null) {
+                if (event.getAction() == DockerRegistryEvent.Action.PUSH && target.getTag() != null) {
 
                     this.broadcastTrainAvailable(
                             UUID.fromString(target.getRepository()),
@@ -68,6 +66,7 @@ public class TrainUpdaterController {
 
 			} catch(final IllegalArgumentException e) {
 
+				e.printStackTrace();
 			    // TODO Currently ignore DockerRegistry events that do not belong to trains
                 // TODO There should be some logging going on
 			}
