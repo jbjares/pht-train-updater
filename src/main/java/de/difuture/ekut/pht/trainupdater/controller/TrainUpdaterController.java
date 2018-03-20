@@ -5,7 +5,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
-import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventCollection;
+import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventIterable;
 import de.difuture.ekut.pht.lib.core.messages.TrainAvailable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +37,7 @@ public class TrainUpdaterController {
 	}
 	
 	private boolean broadcastTrainAvailable(final UUID trainID, final URI host) {
-		
+
 		return this.trainUpdateStreams.outboundTrainAvailable().send(
 				MessageBuilder
 					.withPayload(new TrainAvailable(trainID, host))
@@ -47,7 +47,7 @@ public class TrainUpdaterController {
 
 
 	@RequestMapping(value = "/listener", method = RequestMethod.POST)	
-	public ResponseEntity<?> listener(@RequestBody DockerRegistryEventCollection events) throws JsonProcessingException {
+	public ResponseEntity<?> listener(@RequestBody DockerRegistryEventIterable events) throws JsonProcessingException {
 
 		for (final DockerRegistryEvent event: events) {
 

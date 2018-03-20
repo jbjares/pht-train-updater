@@ -11,7 +11,3 @@ spring:
       kafka:
         binder:
           brokers: localhost:9092
-      bindings:
-        greetings-out:
-          destination: trainupdate
-          contentType: application/json
