@@ -8,7 +8,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092              
+          brokers: kafka:9092              
     config:
       discovery:
         enabled: true
@@ -42,7 +42,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092              
+          brokers: kafka:9092              
     config:
       discovery:
         enabled: true
