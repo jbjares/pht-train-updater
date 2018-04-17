@@ -2,6 +2,7 @@ package de.difuture.ekut.pht.trainupdater.controller;
 
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
@@ -36,11 +37,14 @@ public class TrainUpdaterController {
 		this.trainUpdateStreams = trainUpdateStreams;
 	}
 	
-	private boolean broadcastTrainAvailable(final UUID trainID, final URI host) {
+	private boolean broadcastTrainAvailable(
+			final UUID trainID,
+			final URI trainRegistryURI,
+			final URI pusherURI) {
 
 		return this.trainUpdateStreams.outboundTrainAvailable().send(
 				MessageBuilder
-					.withPayload(new TrainAvailable(trainID, host))
+					.withPayload(new TrainAvailable(trainID, trainRegistryURI, pusherURI))
 					.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
 					.build());
 	}
@@ -61,10 +65,11 @@ public class TrainUpdaterController {
 
                     this.broadcastTrainAvailable(
                             UUID.fromString(target.getRepository()),
-                            event.getRequest().getHost());
+                            event.getRequest().getHost(),
+							new URI(event.getRequest().getAddr()));
                 }
 
-			} catch(final IllegalArgumentException e) {
+			} catch(final IllegalArgumentException | URISyntaxException e) {
 
 				e.printStackTrace();
 			    // TODO Currently ignore DockerRegistry events that do not belong to trains
