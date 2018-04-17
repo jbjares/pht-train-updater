@@ -29,10 +29,6 @@ eureka:
     serviceUrl:
             defaultZone: http://localhost:8761/eureka/
 
-#endpoints:
-# shutdown:
-#  enabled: true
-
 ---
 spring:
   profiles: docker
@@ -65,7 +61,3 @@ eureka:
     fetchRegistry: true
     serviceUrl:
             defaultZone: http://eureka-server:8761/eureka/
-
-#endpoints:
-# shutdown:
-#  enabled: true
