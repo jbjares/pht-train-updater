@@ -12,6 +12,6 @@ RUN mkdir /app && \
 WORKDIR /app
 
 COPY ${JAR_FILE} /app/app.jar
-ENTRYPOINT ["dockerize", "-timeout", "5m", "-wait", "http://dockerregistryservice:6000/actuator/health", "-wait", "http://traincentral:6001/actuator/health", "java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar", "--spring.profiles.active=docker"]
+ENTRYPOINT ["dockerize", "-timeout", "5m", "-wait", "http://config-server:8100/actuator/health", "java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar", "--spring.profiles.active=docker"]
 EXPOSE 6003
 
