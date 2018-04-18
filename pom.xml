@@ -8,7 +8,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>trainupdater</name>
+	<name>train-updater</name>
 	<description>PHT - Propagates updates based on notifications emitted from the Docker Registry</description>
 
 	<parent>
