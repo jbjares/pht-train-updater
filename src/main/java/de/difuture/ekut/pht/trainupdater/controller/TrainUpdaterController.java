@@ -40,6 +40,8 @@ public class TrainUpdaterController {
 			final URI trainRegistryURI,
 			final String tag) {
 
+		System.out.println("TRAINUPDATER " + trainID.toString());
+
 		return this.source.output().send(
 				MessageBuilder
 						.withPayload(new TrainAvailable(trainID, trainRegistryURI, tag))
