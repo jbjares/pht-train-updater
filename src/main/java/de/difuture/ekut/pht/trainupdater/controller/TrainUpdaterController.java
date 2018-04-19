@@ -8,6 +8,7 @@ import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventIterable;
 import de.difuture.ekut.pht.lib.core.messages.TrainAvailable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.MessageHeaders;
@@ -22,18 +23,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 
 @RestController
+@EnableBinding(Source.class)
 public class TrainUpdaterController {
 
 	private static final ResponseEntity<?> OK = ResponseEntity.ok().build();
 
-	// Source for publishing messages
-	private final Source source;
-
 	@Autowired
-	public TrainUpdaterController(Source source) {
-
-		this.source = source;
-	}
+	private Source source;
 
 	private boolean broadcastTrainAvailable(
 			final UUID trainID,
