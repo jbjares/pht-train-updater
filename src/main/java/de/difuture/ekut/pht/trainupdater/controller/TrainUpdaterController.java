@@ -36,7 +36,9 @@ public class TrainUpdaterController {
 			final URI trainRegistryURI,
 			final String tag) {
 
-		System.out.println("TRAINUPDATER " + trainID.toString());
+		System.out.println("TRAINUPDATER TRAINID" + trainID.toString());
+        System.out.println("TRAINUPDATER TRAINREGISTRYURI" + trainRegistryURI.toString());
+        System.out.println("TRAINUPDATER TRAINTAG" + tag);
 
 		return this.source.output().send(
 				MessageBuilder
@@ -58,7 +60,7 @@ public class TrainUpdaterController {
 			try {
                 // Sends a train available message if
                 // * Docker Registry Event Action is Push
-                // * The tag is not null
+                // * The trainTag is not null
                 if (event.getAction() == DockerRegistryEvent.Action.PUSH && tag != null) {
 
                     this.broadcastTrainAvailable(
