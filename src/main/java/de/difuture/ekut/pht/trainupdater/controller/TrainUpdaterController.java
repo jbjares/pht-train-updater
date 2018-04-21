@@ -22,23 +22,26 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 
+
 @RestController
 @EnableBinding(Source.class)
 public class TrainUpdaterController {
 
 	private static final ResponseEntity<?> OK = ResponseEntity.ok().build();
 
-	@Autowired
-	private Source source;
+	// Where the TrainUpdate messages are going to be sent to
+	private final Source source;
 
-	private boolean broadcastTrainAvailable(
+	@Autowired
+	public TrainUpdaterController(Source source) {
+
+	    this.source = source;
+    }
+
+	private boolean sendTrainAvailable(
 			final UUID trainID,
 			final URI trainRegistryURI,
 			final String tag) {
-
-		System.out.println("TRAINUPDATER TRAINID" + trainID.toString());
-        System.out.println("TRAINUPDATER TRAINREGISTRYURI" + trainRegistryURI.toString());
-        System.out.println("TRAINUPDATER TRAINTAG" + tag);
 
 		return this.source.output().send(
 				MessageBuilder
@@ -63,7 +66,7 @@ public class TrainUpdaterController {
                 // * The trainTag is not null
                 if (event.getAction() == DockerRegistryEvent.Action.PUSH && tag != null) {
 
-                    this.broadcastTrainAvailable(
+                    this.sendTrainAvailable(
                             UUID.fromString(target.getRepository()),
                             event.getRequest().getHost(),
 							tag);
