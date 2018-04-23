@@ -6,7 +6,9 @@ import java.util.UUID;
 
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventIterable;
-import de.difuture.ekut.pht.lib.core.messages.TrainAvailable;
+import de.difuture.ekut.pht.lib.core.messages.TrainUpdate;
+import de.difuture.ekut.pht.lib.core.traintag.InvalidTrainTagException;
+import de.difuture.ekut.pht.lib.core.traintag.TrainTag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
@@ -41,11 +43,11 @@ public class TrainUpdaterController {
 	private boolean sendTrainAvailable(
 			final UUID trainID,
 			final URI trainRegistryURI,
-			final String tag) {
+			final TrainTag tag) {
 
 		return this.source.output().send(
 				MessageBuilder
-						.withPayload(new TrainAvailable(trainID, trainRegistryURI, tag))
+						.withPayload(new TrainUpdate(trainID, trainRegistryURI, tag))
 						.setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
 						.build()
 		);
@@ -58,21 +60,23 @@ public class TrainUpdaterController {
 		for (final DockerRegistryEvent event: events) {
 
 			final DockerRegistryEvent.Target target = event.getTarget();
-			final String tag = target.getTag();
+
+			// Convert the tag from the Docker Registry to a Traintag
+			final TrainTag trainTag = TrainTag.of(target.getTag());
 
 			try {
                 // Sends a train available message if
                 // * Docker Registry Event Action is Push
                 // * The trainTag is not null
-                if (event.getAction() == DockerRegistryEvent.Action.PUSH && tag != null) {
+                if (event.getAction() == DockerRegistryEvent.Action.PUSH && trainTag != null) {
 
                     this.sendTrainAvailable(
                             UUID.fromString(target.getRepository()),
                             event.getRequest().getHost(),
-							tag);
+							trainTag);
                 }
 
-			} catch(final IllegalArgumentException e) {
+			} catch(final IllegalArgumentException | InvalidTrainTagException e) {
 
 				e.printStackTrace();
 			    // TODO Currently ignore DockerRegistry events that do not belong to trains
