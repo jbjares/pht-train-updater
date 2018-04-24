@@ -21,9 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-
 
 @RestController
 @EnableBinding(Source.class)
@@ -55,25 +52,23 @@ public class TrainUpdaterController {
 
 
 	@RequestMapping(value = "/listener", method = RequestMethod.POST)	
-	public ResponseEntity<?> listener(@RequestBody DockerRegistryEventIterable events) throws JsonProcessingException {
+	public ResponseEntity<?> listener(@RequestBody DockerRegistryEventIterable events) {
 
 		for (final DockerRegistryEvent event: events) {
 
 			final DockerRegistryEvent.Target target = event.getTarget();
-
-			// Convert the tag from the Docker Registry to a Traintag
-			final TrainTag trainTag = TrainTag.of(target.getTag());
+			final String tag = target.getTag();
 
 			try {
                 // Sends a train available message if
                 // * Docker Registry Event Action is Push
                 // * The trainTag is not null
-                if (event.getAction() == DockerRegistryEvent.Action.PUSH && trainTag != null) {
+                if (event.getAction() == DockerRegistryEvent.Action.PUSH && tag != null) {
 
                     this.sendTrainAvailable(
                             UUID.fromString(target.getRepository()),
                             event.getRequest().getHost(),
-							trainTag);
+							TrainTag.of(tag));
                 }
 
 			} catch(final IllegalArgumentException | InvalidTrainTagException e) {
