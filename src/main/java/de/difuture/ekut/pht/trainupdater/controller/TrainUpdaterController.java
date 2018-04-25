@@ -2,13 +2,10 @@ package de.difuture.ekut.pht.trainupdater.controller;
 
 
 import java.net.URI;
-import java.util.UUID;
 
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEvent;
 import de.difuture.ekut.pht.lib.core.dockerevent.DockerRegistryEventIterable;
 import de.difuture.ekut.pht.lib.core.messages.TrainUpdate;
-import de.difuture.ekut.pht.lib.core.traintag.InvalidTrainTagException;
-import de.difuture.ekut.pht.lib.core.traintag.TrainTag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
@@ -38,9 +35,9 @@ public class TrainUpdaterController {
     }
 
 	private boolean sendTrainAvailable(
-			final UUID trainID,
+			final Long trainID,
 			final URI trainRegistryURI,
-			final TrainTag tag) {
+			final String tag) {
 
 		return this.source.output().send(
 				MessageBuilder
@@ -66,12 +63,12 @@ public class TrainUpdaterController {
                 if (event.getAction() == DockerRegistryEvent.Action.PUSH && tag != null) {
 
                     this.sendTrainAvailable(
-                            UUID.fromString(target.getRepository()),
+                            Long.valueOf(target.getRepository()),
                             event.getRequest().getHost(),
-							TrainTag.of(tag));
+							tag);
                 }
 
-			} catch(final IllegalArgumentException | InvalidTrainTagException e) {
+			} catch(final IllegalArgumentException e) {
 
 				e.printStackTrace();
 			    // TODO Currently ignore DockerRegistry events that do not belong to trains
